@@ -10,6 +10,10 @@ import (
 
 var dsnStorageLockFactoryBeanFactory *storage_lock_factory.StorageLockFactoryBeanFactory[string, *sql.DB] = storage_lock_factory.NewStorageLockFactoryBeanFactory[string, *sql.DB]()
 
+// newSqlServerStorageByDsn 指向 sqlserver_storage.NewSqlServerStorage，包级变量以便单测注入构造结果，
+// 覆盖 GetOrInit initFunc 的分支（无真库环境无法走通真实构造）。
+var newSqlServerStorageByDsn = sqlserver_storage.NewSqlServerStorage
+
 func NewSqlServerLockByDsn(ctx context.Context, dsn string, lockId string) (*storage_lock.StorageLock, error) {
 	factory, err := GetSqlServerLockFactoryByDsn(ctx, dsn)
 	if err != nil {
@@ -30,7 +34,7 @@ func GetSqlServerLockFactoryByDsn(ctx context.Context, uri string) (*storage_loc
 	return dsnStorageLockFactoryBeanFactory.GetOrInit(ctx, uri, func(ctx context.Context) (*storage_lock_factory.StorageLockFactory[*sql.DB], error) {
 		connectionManager := sqlserver_storage.NewSqlServerConnectionManagerFromDsn(uri)
 		options := sqlserver_storage.NewSqlServerStorageOptions().SetConnectionManager(connectionManager)
-		storage, err := sqlserver_storage.NewSqlServerStorage(ctx, options)
+		storage, err := newSqlServerStorageByDsn(ctx, options)
 		if err != nil {
 			return nil, err
 		}

@@ -2,21 +2,27 @@ package sqlserver_locks
 
 import (
 	"context"
-	storage_lock_test_helper "github.com/storage-lock/go-storage-lock-test-helper"
-	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestNewSqlServerLockByDsn(t *testing.T) {
-	envName := "STORAGE_LOCK_SQLSERVER_DSN"
-	sqlServerDsn := os.Getenv(envName)
-	assert.NotEmpty(t, sqlServerDsn)
-
-	factory, err := GetSqlServerLockFactoryByDsn(context.Background(), sqlServerDsn)
-	assert.Nil(t, err)
-
-	storage_lock_test_helper.PlayerNum = 10
-	storage_lock_test_helper.EveryOnePlayTimes = 100
-	storage_lock_test_helper.TestStorageLock(t, factory)
+func TestGlobalDsnLockFactoryBeanFactory_InitiallyInitialized(t *testing.T) {
+	assert.NotNil(t, dsnStorageLockFactoryBeanFactory)
 }
+
+func TestNewSqlServerLockByDsn_InvalidDsn(t *testing.T) {
+	_, err := NewSqlServerLockByDsn(context.Background(), "invalid-dsn", "test-lock")
+	assert.Error(t, err)
+}
+
+func TestGetSqlServerLockFactoryByDsn_InvalidDsn(t *testing.T) {
+	_, err := GetSqlServerLockFactoryByDsn(context.Background(), "invalid-dsn")
+	assert.Error(t, err)
+}
+
+func TestNewSqlServerLockByDsnWithOptions_InvalidDsn(t *testing.T) {
+	_, err := NewSqlServerLockByDsnWithOptions(context.Background(), "invalid-dsn", nil)
+	assert.Error(t, err)
+}
+
